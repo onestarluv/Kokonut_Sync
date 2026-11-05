@@ -81,3 +81,15 @@ tasks {
 
     }
 }
+
+// Collect only the server plugin; common/API, sources and javadoc artifacts stay in target.
+tasks.named('shadowJar') {
+    archiveFileName.set("${rootProject.name}-${rootProject.version}.jar")
+}
+def collectPluginArtifact = tasks.register('collectPluginArtifact', Copy) {
+    def artifact = tasks.named('shadowJar')
+    dependsOn artifact
+    from(artifact.flatMap { it.archiveFile })
+    into(rootProject.layout.projectDirectory.dir('../core/plugin'))
+}
+tasks.named('shadowJar') { finalizedBy collectPluginArtifact }
