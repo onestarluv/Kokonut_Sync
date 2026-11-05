@@ -26,7 +26,6 @@ import com.google.gson.GsonBuilder;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.platform.AudienceProvider;
 import net.william278.desertwell.util.ThrowingConsumer;
-import net.william278.desertwell.util.UpdateChecker;
 import net.william278.desertwell.util.Version;
 import net.william278.husksync.adapter.DataAdapter;
 import net.william278.husksync.config.ConfigProvider;
@@ -36,7 +35,6 @@ import net.william278.husksync.data.SerializerRegistry;
 import net.william278.husksync.database.Database;
 import net.william278.husksync.event.EventDispatcher;
 import net.william278.husksync.listener.LockedHandler;
-import net.william278.husksync.migrator.Migrator;
 import net.william278.husksync.redis.RedisManager;
 import net.william278.husksync.sync.DataSyncer;
 import net.william278.husksync.user.ConsoleUser;
@@ -122,13 +120,7 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
     @NotNull
     Uniform getUniform();
 
-    /**
-     * Returns a list of available data {@link Migrator}s
-     *
-     * @return a list of {@link Migrator}s
-     */
-    @NotNull
-    List<Migrator> getAvailableMigrators();
+
 
     @NotNull
     Map<UUID, Map<Identifier, Data>> getPlayerCustomDataStore();
@@ -239,7 +231,7 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
      * @return the plugin {@link Version}
      */
     @NotNull
-    Version getPluginVersion();
+    String getPluginVersion();
 
     /**
      * Returns the Minecraft version implementation
@@ -272,27 +264,9 @@ public interface HuskSync extends Task.Supplier, EventDispatcher, ConfigProvider
      */
     Optional<LegacyConverter> getLegacyConverter();
 
-    @NotNull
-    default UpdateChecker getUpdateChecker() {
-        return UpdateChecker.builder()
-                .currentVersion(getPluginVersion())
-                .endpoint(UpdateChecker.Endpoint.SPIGOT)
-                .resource(Integer.toString(SPIGOT_RESOURCE_ID))
-                .build();
-    }
 
-    default void checkForUpdates() {
-        if (getSettings().isCheckForUpdates()) {
-            getUpdateChecker().check().thenAccept(checked -> {
-                if (!checked.isUpToDate()) {
-                    log(Level.WARNING, String.format(
-                            "A new version of HuskSync is available: v%s (running v%s)",
-                            checked.getLatestVersion(), getPluginVersion())
-                    );
-                }
-            });
-        }
-    }
+
+
 
     @NotNull
     LockedHandler getLockedHandler();

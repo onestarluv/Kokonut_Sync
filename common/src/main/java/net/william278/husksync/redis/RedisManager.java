@@ -79,11 +79,13 @@ public class RedisManager implements RedisPubSubListener<byte[], byte[]> {
     public void initialize() throws IllegalStateException {
         final Settings.RedisSettings.RedisCredentials credentials = plugin.getSettings().getRedis().getCredentials();
 
-        final String user = credentials.getUser();
-        final String password = credentials.getPassword();
-        final String host = credentials.getHost();
-        final int port = credentials.getPort();
-        final int database = credentials.getDatabase();
+        final var core = kr.gomsv.kokonutCore.database.RedisSettings.fixed();
+        if (!core.enabled()) throw new IllegalStateException("Core Redis is disabled");
+        final String user = core.username();
+        final String password = core.password();
+        final String host = core.host();
+        final int port = core.port();
+        final int database = core.database();
         final boolean useSSL = credentials.isUseSsl();
 
         // 1. BUILD REDIS URI WITH AUTHENTICATION

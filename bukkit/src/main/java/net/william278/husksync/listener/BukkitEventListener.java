@@ -80,18 +80,7 @@ public class BukkitEventListener extends EventListener implements BukkitJoinEven
     }
 
     @NotNull
-    private LockedHandler createLockedHandler(@NotNull BukkitHuskSync plugin) {
-        if (!getPlugin().getSettings().isCancelPackets()) {
-            return new BukkitLockedEventListener(plugin);
-        }
-        if (getPlugin().isDependencyLoaded("PacketEvents")) {
-            return new BukkitPacketEventsLockedPacketListener(plugin);
-        } else if (getPlugin().isDependencyLoaded("ProtocolLib")) {
-            return new BukkitProtocolLibLockedPacketListener(plugin);
-        }
-
-        return new BukkitLockedEventListener(plugin);
-    }
+    private LockedHandler createLockedHandler(@NotNull BukkitHuskSync plugin) { return new BukkitLockedEventListener(plugin); }
 
     @Override
     public boolean handleEvent(@NotNull ListenerType type, @NotNull Priority priority) {

@@ -44,7 +44,7 @@ import java.util.Map;
 @SuppressWarnings("FieldMayBeFinal")
 @Getter
 @Configuration
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class Settings {
 
     protected static final String CONFIG_HEADER = """
@@ -60,8 +60,6 @@ public class Settings {
     @Comment({"Locale of the default language file to use.", "Docs: https://william278.net/docs/husksync/translations"})
     private String language = Locales.DEFAULT_LOCALE;
 
-    @Comment("Whether to automatically check for plugin updates on startup")
-    private boolean checkForUpdates = true;
 
     @Comment("Specify a common ID for grouping servers running HuskSync. "
              + "Don't modify this unless you know what you're doing!")
@@ -70,11 +68,7 @@ public class Settings {
     @Comment("Enable development debug logging")
     private boolean debugLogging = false;
 
-    @Comment({"Whether to enable the Player Analytics hook.", "Docs: https://william278.net/docs/husksync/plan-hook"})
-    private boolean enablePlanHook = true;
 
-    @Comment("Whether to cancel game event packets directly when handling locked players if ProtocolLib or PacketEvents is installed")
-    private boolean cancelPackets = true;
 
     @Comment("Add HuskSync commands to this list to prevent them from being registered (e.g. ['userdata'])")
     @Getter(AccessLevel.NONE)
@@ -89,53 +83,8 @@ public class Settings {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static class DatabaseSettings {
 
-        @Comment("Type of database to use (MYSQL, MARIADB, POSTGRES, MONGO)")
+        @Comment("Core MySQL database")
         private Database.Type type = Database.Type.MYSQL;
-
-        @Comment("Specify credentials here for your MYSQL, MARIADB, POSTGRES OR MONGO database")
-        private DatabaseCredentials credentials = new DatabaseCredentials();
-
-        @Getter
-        @Configuration
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
-        public static class DatabaseCredentials {
-            private String host = "localhost";
-            private int port = 3306;
-            private String database = "HuskSync";
-            private String username = "root";
-            private String password = "pa55w0rd";
-            @Comment("Only change this if you're using MARIADB or POSTGRES")
-            private String parameters = String.join("&",
-                    "?autoReconnect=true", "useSSL=false",
-                    "useUnicode=true", "characterEncoding=UTF-8");
-        }
-
-        @Comment("MYSQL, MARIADB, POSTGRES database Hikari connection pool properties. Don't modify this unless you know what you're doing!")
-        private PoolSettings connectionPool = new PoolSettings();
-
-        @Getter
-        @Configuration
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
-        public static class PoolSettings {
-            private int maximumPoolSize = 10;
-            private int minimumIdle = 10;
-            private long maximumLifetime = 1800000;
-            private long keepaliveTime = 0;
-            private long connectionTimeout = 5000;
-        }
-
-        @Comment("Advanced MongoDB settings. Don't modify unless you know what you're doing!")
-        private MongoSettings mongoSettings = new MongoSettings();
-
-        @Getter
-        @Configuration
-        @NoArgsConstructor(access = AccessLevel.PRIVATE)
-        public static class MongoSettings {
-            private boolean usingAtlas = false;
-            private String parameters = String.join("&",
-                    "?retryWrites=true", "w=majority",
-                    "authSource=HuskSync");
-        }
 
         @Comment("Names of tables to use on your database. Don't modify this unless you know what you're doing!")
         @Getter(AccessLevel.NONE)
@@ -168,12 +117,11 @@ public class Settings {
         @Configuration
         @NoArgsConstructor(access = AccessLevel.PRIVATE)
         public static class RedisCredentials {
-            private String host = "localhost";
-            private int port = 6379;
-            @Comment("Only change the database if you know what you are doing. The default is 0.")
-            private int database = 0;
-            private String user = "";
-            private String password = "";
+            public String getHost() { return kr.gomsv.kokonutCore.database.RedisSettings.fixed().host(); }
+            public int getPort() { return kr.gomsv.kokonutCore.database.RedisSettings.fixed().port(); }
+            public int getDatabase() { return kr.gomsv.kokonutCore.database.RedisSettings.fixed().database(); }
+            public String getUser() { return kr.gomsv.kokonutCore.database.RedisSettings.fixed().username(); }
+            public String getPassword() { return kr.gomsv.kokonutCore.database.RedisSettings.fixed().password(); }
 
             @Comment("Use SSL/TLS for encrypted connections.")
             private boolean useSsl = false;

@@ -1,27 +1,14 @@
-name: 'HuskSync'
+name: Kokonut_Sync
 description: '${description}'
-author: 'William278'
-website: 'https://william278.net/'
-main: 'net.william278.husksync.PaperHuskSync'
-loader: 'net.william278.husksync.PaperHuskSyncLoader'
+author: pingpong
+website: https://wiki.egoverse.kr
+main: net.william278.husksync.PaperHuskSync
+loader: net.william278.husksync.PaperHuskSyncLoader
 version: '${version}'
-api-version: '${minecraft_api_version}'
-folia-supported: true
+api-version: '26.3'
 dependencies:
   server:
-    packetevents:
-      required: false
-      load: BEFORE
-      join-classpath: true
-    ProtocolLib:
-      required: false
-      load: BEFORE
-      join-classpath: true
-    MysqlPlayerDataBridge:
-      required: false
-      load: BEFORE
-      join-classpath: true
-    Plan:
-      required: false
+    Kokonut-Core:
+      required: true
       load: BEFORE
       join-classpath: true

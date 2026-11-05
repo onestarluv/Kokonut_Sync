@@ -41,17 +41,11 @@ import net.william278.husksync.config.Server;
 import net.william278.husksync.config.Settings;
 import net.william278.husksync.data.*;
 import net.william278.husksync.database.Database;
-import net.william278.husksync.database.MongoDbDatabase;
 import net.william278.husksync.database.MySqlDatabase;
-import net.william278.husksync.database.PostgresDatabase;
 import net.william278.husksync.event.BukkitEventDispatcher;
-import net.william278.husksync.hook.PlanHook;
 import net.william278.husksync.listener.BukkitEventListener;
 import net.william278.husksync.listener.LockedHandler;
 import net.william278.husksync.maps.BukkitMapHandler;
-import net.william278.husksync.migrator.LegacyMigrator;
-import net.william278.husksync.migrator.Migrator;
-import net.william278.husksync.migrator.MpdbMigrator;
 import net.william278.husksync.redis.RedisManager;
 import net.william278.husksync.sync.DataSyncer;
 import net.william278.husksync.user.BukkitUser;
@@ -63,7 +57,6 @@ import net.william278.toilet.BukkitToilet;
 import net.william278.toilet.Toilet;
 import net.william278.uniform.Uniform;
 import net.william278.uniform.bukkit.BukkitUniform;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.Plugin;
@@ -86,16 +79,11 @@ import java.util.stream.Collectors;
 public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.Supplier,
         BukkitEventDispatcher, BukkitMapHandler {
 
-    /**
-     * Metrics ID for <a href="https://bstats.org/plugin/bukkit/HuskSync%20-%20Bukkit/13140">HuskSync on Bukkit</a>.
-     */
-    private static final int METRICS_ID = 13140;
     private static final String PLATFORM_TYPE_ID = "bukkit";
 
     private final HashMap<Identifier, Serializer<? extends Data>> serializers = Maps.newHashMap();
     private final Map<UUID, Map<Identifier, Data>> playerCustomDataStore = Maps.newConcurrentMap();
     private final Map<Integer, MapView> mapViews = Maps.newConcurrentMap();
-    private final List<Migrator> availableMigrators = Lists.newArrayList();
     private final Set<UUID> lockedPlayers = Sets.newConcurrentHashSet();
     private final Set<UUID> disconnectingPlayers = Sets.newConcurrentHashSet();
 
@@ -131,7 +119,7 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
         initialize("plugin config & locale files", (plugin) -> {
             loadSettings();
             loadLocales();
-            loadServer();
+
             validateConfigFiles();
         });
 
@@ -141,6 +129,7 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
 
     @Override
     public void onEnable() {
+        loadServer();
         this.audiences = BukkitAudiences.create(this);
         this.toilet = BukkitToilet.create(getDumpOptions());
 
@@ -182,22 +171,11 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
             validateDependencies();
         });
 
-        // Setup available migrators
-        initialize("data migrators/converters", (plugin) -> {
-            availableMigrators.add(new LegacyMigrator(this));
-            if (isDependencyLoaded("MySqlPlayerDataBridge")) {
-                availableMigrators.add(new MpdbMigrator(this));
-            }
-            legacyConverter = new BukkitLegacyConverter(this);
-        });
+        legacyConverter = new BukkitLegacyConverter(this);
 
         // Initialize the database
         initialize(getSettings().getDatabase().getType().getDisplayName() + " database connection", (plugin) -> {
-            this.database = switch (settings.getDatabase().getType()) {
-                case MYSQL, MARIADB -> new MySqlDatabase(this);
-                case POSTGRES -> new PostgresDatabase(this);
-                case MONGO -> new MongoDbDatabase(this);
-            };
+            this.database = new MySqlDatabase(this, getServer().getServicesManager().load(kr.gomsv.kokonutCore.api.database.CoreDatabase.class));
             this.database.initialize();
         });
 
@@ -216,19 +194,10 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
         // Register events
         initialize("events", (plugin) -> eventListener.onEnable());
 
-        // Register plugin hooks
-        initialize("hooks", (plugin) -> {
-            if (isDependencyLoaded("Plan") && getSettings().isEnablePlanHook()) {
-                new PlanHook(this).hookIntoPlan();
-            }
-        });
-
         // Register API
         initialize("api", (plugin) -> BukkitHuskSyncAPI.register(this));
 
-        // Hook into bStats and check for updates
-        initialize("metrics", (plugin) -> this.registerMetrics(METRICS_ID));
-        this.checkForUpdates();
+
     }
 
     @Override
@@ -256,7 +225,7 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
         this.cancelTasks();
 
         // Complete shutdown
-        log(Level.INFO, "Successfully disabled HuskSync v" + getPluginVersion());
+        log(Level.INFO, "Successfully disabled Kokonut_Sync v" + getPluginVersion());
     }
 
     @NotNull
@@ -310,23 +279,19 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
     }
 
     @Override
+    public void loadServer() {
+        if (getServer().getWorlds().isEmpty()) throw new IllegalStateException("Main world is unavailable");
+        setServerName(Server.of(getServer().getWorlds().getFirst().getName()));
+    }
+
+    @Override
     public boolean isDependencyLoaded(@NotNull String name) {
         final Plugin plugin = getServer().getPluginManager().getPlugin(name);
         return plugin != null;
     }
 
     // Register bStats metrics
-    public void registerMetrics(int metricsId) {
-        if (!getPluginVersion().getMetadata().isBlank()) {
-            return;
-        }
 
-        try {
-            new Metrics(this, metricsId);
-        } catch (Throwable e) {
-            log(Level.WARNING, "Failed to register bStats metrics (%s)".formatted(e.getMessage()));
-        }
-    }
 
     @Override
     public void log(@NotNull Level level, @NotNull String message, @NotNull Throwable... throwable) {
@@ -339,8 +304,8 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
 
     @NotNull
     @Override
-    public Version getPluginVersion() {
-        return Version.fromString(getDescription().getVersion(), "-");
+    public String getPluginVersion() {
+        return getDescription().getVersion();
     }
 
     @NotNull

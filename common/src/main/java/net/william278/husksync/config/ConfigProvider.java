@@ -67,13 +67,7 @@ public interface ConfigProvider {
      *
      * @since 1.0
      */
-    default void loadSettings() {
-        setSettings(YamlConfigurations.update(
-                getConfigDirectory().resolve("config.yml"),
-                Settings.class,
-                YAML_CONFIGURATION_PROPERTIES.header(Settings.CONFIG_HEADER).build()
-        ));
-    }
+    default void loadSettings() { setSettings(new Settings()); }
 
     /**
      * Get the locales for the plugin
@@ -98,35 +92,9 @@ public interface ConfigProvider {
      * @since 1.0
      */
     default void loadLocales() {
-        final YamlConfigurationStore<Locales> store = new YamlConfigurationStore<>(
-                Locales.class, YAML_CONFIGURATION_PROPERTIES.header(Locales.CONFIG_HEADER).build()
-        );
-        final Path path = getConfigDirectory().resolve(String.format("messages-%s.yml", getSettings().getLanguage()));
-
-        // Re-extract locales if the format version has changed
-        if (Files.exists(path)) {
-            try {
-                final Locales existing = store.load(path);
-                if (existing.locale_format_version != null
-                        && existing.locale_format_version >= Locales.LOCALE_FORMAT_VERSION) {
-                    setLocales(existing);
-                    return;
-                }
-                getPlugin().log(Level.INFO, "Locale format updated; re-extracting locale file.");
-            } catch (Throwable e) {
-                getPlugin().log(Level.WARNING, "Could not read existing locale file; re-extracting.", e);
-            }
-        }
-
-        // Save and read the default locales from the JAR
-        try (InputStream input = getResource(String.format("locales/%s.yml", getSettings().getLanguage()))) {
-            final Locales locales = store.read(input);
-            locales.locale_format_version = Locales.LOCALE_FORMAT_VERSION;
-            store.save(locales, path);
-            setLocales(locales);
-        } catch (Throwable e) {
-            getPlugin().log(Level.SEVERE, "An error occurred loading the locales (invalid lang code?)", e);
-        }
+        try (InputStream input = getResource("locales/ko-kr.yml")) {
+            setLocales(new YamlConfigurationStore<>(Locales.class, YAML_CONFIGURATION_PROPERTIES.build()).read(input));
+        } catch (Exception e) { throw new IllegalStateException("Failed to read bundled locales", e); }
     }
 
     @NotNull
@@ -134,29 +102,9 @@ public interface ConfigProvider {
 
     void setServerName(@NotNull Server server);
 
-    default void loadServer() {
-        setServerName(YamlConfigurations.update(
-                getConfigDirectory().resolve("server.yml"),
-                Server.class,
-                YAML_CONFIGURATION_PROPERTIES.header(Server.CONFIG_HEADER).build()
-        ));
+    void loadServer();
 
-        String envServerName = System.getenv("HUSKSYNC_SERVER_NAME");
-        if (envServerName != null && !envServerName.isEmpty()) {
-            Server server = Server.of(envServerName);
-            setServerName(server);
-            getPlugin().log(Level.INFO, "Server name set to: " + envServerName);
-        }
-    }
-
-    default void validateConfigFiles() {
-        // Validate server name is default
-        if (getServerName().equals("server")) {
-            getPlugin().log(Level.WARNING, "The server name set in ~/plugins/HuskSync/server.yml appears to" +
-                    "be unchanged from the default (currently set to: \"server\"). Please check that this value has" +
-                    "been updated to match the case-sensitive ID of this server in your proxy config file!");
-        }
-    }
+    default void validateConfigFiles() {}
 
     /**
      * Get a plugin resource

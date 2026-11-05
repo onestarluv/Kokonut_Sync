@@ -356,10 +356,7 @@ public abstract class Database {
      */
     @Getter
     public enum Type {
-        MYSQL("MySQL", "mysql"),
-        MARIADB("MariaDB", "mariadb"),
-        POSTGRES("PostgreSQL", "postgresql"),
-        MONGO("MongoDB", "mongo");
+        MYSQL("MySQL", "mysql");
 
         private final String displayName;
         private final String protocol;

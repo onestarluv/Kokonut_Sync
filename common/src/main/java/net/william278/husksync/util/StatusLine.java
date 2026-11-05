@@ -34,9 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum StatusLine {
-    PLUGIN_VERSION(plugin -> Component.text("v" + plugin.getPluginVersion().toStringWithoutMetadata())
-            .appendSpace().append(plugin.getPluginVersion().getMetadata().isBlank() ? Component.empty()
-                    : Component.text("(build " + plugin.getPluginVersion().getMetadata() + ")"))),
+    PLUGIN_VERSION(plugin -> Component.text(plugin.getPluginVersion())),
     SERVER_VERSION(plugin -> Component.text(plugin.getServerVersion())),
     LANGUAGE(plugin -> Component.text(plugin.getSettings().getLanguage())),
     MINECRAFT_VERSION(plugin -> Component.text(plugin.getMinecraftVersion().toString())),
@@ -50,12 +48,7 @@ public enum StatusLine {
     DELAY_LATENCY(plugin -> Component.text(
             plugin.getSettings().getSynchronization().getNetworkLatencyMilliseconds() + "ms"
     )),
-    DATABASE_TYPE(plugin ->
-            Component.text(plugin.getSettings().getDatabase().getType().getDisplayName() +
-                    (plugin.getSettings().getDatabase().getType() == Database.Type.MONGO ?
-                            (plugin.getSettings().getDatabase().getMongoSettings().isUsingAtlas() ? " Atlas" : "") : ""))
-    ),
-    IS_DATABASE_LOCAL(plugin -> getLocalhostBoolean(plugin.getSettings().getDatabase().getCredentials().getHost())),
+    DATABASE_TYPE(plugin -> Component.text("Core MySQL")),
     REDIS_VERSION(plugin -> Component.text(plugin.getRedisManager().getVersion())),
     USING_REDIS_SENTINEL(plugin -> getBoolean(
             !plugin.getSettings().getRedis().getSentinel().getMaster().isBlank()

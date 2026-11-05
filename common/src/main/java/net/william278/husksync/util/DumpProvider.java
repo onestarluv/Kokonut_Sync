@@ -94,7 +94,6 @@ public interface DumpProvider {
                 Map.ofEntries(
                         Map.entry("Language", StatusLine.LANGUAGE.getValue(getPlugin())),
                         Map.entry("Database Type", StatusLine.DATABASE_TYPE.getValue(getPlugin())),
-                        Map.entry("Database Local", StatusLine.IS_DATABASE_LOCAL.getValue(getPlugin())),
                         Map.entry("Locked User Handler", StatusLine.LOCKED_USER_HANDLER.getValue(getPlugin())),
                         Map.entry("Server Name", StatusLine.SERVER_NAME.getValue(getPlugin())),
                         Map.entry("Redis Version", StatusLine.REDIS_VERSION.getValue(getPlugin())),

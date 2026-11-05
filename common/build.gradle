@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    compileOnly files(rootProject.file(findProperty('coreJar') ?: '../core/Kokonut-Core/build/libs/Kokonut-Core-cbt-1.0.jar'))
     api 'commons-io:commons-io:2.22.0'
     api 'org.apache.commons:commons-text:1.15.0'
     api 'net.william278:mapdataapi:2.0'
@@ -11,9 +12,6 @@ dependencies {
     api 'com.fatboyindustrial.gson-javatime-serialisers:gson-javatime-serialisers:1.1.2'
     api 'de.exlll:configlib-yaml:4.8.1'
     api 'net.william278:DesertWell:2.0.4'
-    api('com.zaxxer:HikariCP:7.1.0') {
-        exclude module: 'slf4j-api'
-    }
 
     compileOnlyApi 'net.william278.toilet:toilet-common:1.1.2'
 
@@ -26,18 +24,13 @@ dependencies {
     compileOnly "net.kyori:adventure-text-serializer-plain:4.25.0"
     compileOnly "net.kyori:adventure-text-minimessage:4.25.0"
     compileOnly 'com.google.guava:guava:33.7.1-jre'
-    compileOnly 'com.github.plan-player-analytics:Plan:5.6.2965'
     compileOnly "io.lettuce:lettuce-core:$lettuce_version"
     compileOnly "org.apache.commons:commons-pool2:$commons_pool_version"
     compileOnly "com.mysql:mysql-connector-j:$mysql_driver_version"
-    compileOnly "org.mariadb.jdbc:mariadb-java-client:$mariadb_driver_version"
-    compileOnly "org.postgresql:postgresql:$postgres_driver_version"
-    compileOnly "org.mongodb:mongodb-driver-sync:$mongodb_driver_version"
     compileOnly "org.xerial.snappy:snappy-java:$snappy_version"
 
     testImplementation "org.xerial.snappy:snappy-java:$snappy_version"
     testImplementation 'com.google.guava:guava:33.7.1-jre'
-    testImplementation 'com.github.plan-player-analytics:Plan:5.6.2965'
     testImplementation 'net.kyori:adventure-text-minimessage:4.25.0'
     testCompileOnly 'de.exlll:configlib-yaml:4.8.1'
     testCompileOnly 'org.jetbrains:annotations:26.1.0'

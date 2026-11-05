@@ -27,11 +27,9 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import net.william278.desertwell.util.UpdateChecker;
 import net.william278.husksync.HuskSync;
 import net.william278.husksync.data.DataSnapshot;
 import net.william278.husksync.database.Database;
-import net.william278.husksync.migrator.Migrator;
 import net.william278.husksync.user.CommandUser;
 import net.william278.husksync.util.LegacyConverter;
 import net.william278.husksync.util.StatusLine;
@@ -50,76 +48,17 @@ import java.util.stream.Collectors;
 
 public class HuskSyncCommand extends PluginCommand {
 
-    private final UpdateChecker updateChecker;
     private final Component aboutMenu;
 
     public HuskSyncCommand(@NotNull HuskSync plugin) {
         super("husksync", List.of(), Permission.Default.TRUE, ExecutionScope.ALL, plugin);
-        this.updateChecker = plugin.getUpdateChecker();
         this.aboutMenu = buildAboutMenu(plugin);
     }
 
     @NotNull
     private static Component buildAboutMenu(@NotNull HuskSync plugin) {
-        final TextColor primary = TextColor.color(0x00fb9a);
-        final TextColor gray = TextColor.color(0x808080);
-
-        return Component.join(JoinConfiguration.newlines(),
-                // Title
-                Component.textOfChildren(
-                        Component.text("HuskSync", primary, TextDecoration.BOLD),
-                        Component.text(" v" + plugin.getPluginVersion(), NamedTextColor.GRAY)
-                ),
-                // Description
-                Component.text("A modern, cross-server player data synchronization system", gray),
-                Component.empty(),
-                // Credits
-                buildCredits("Author",
-                        Component.text("William278", primary)
-                                .hoverEvent(Component.text("Click to visit website", gray))
-                                .clickEvent(ClickEvent.openUrl("https://william278.net"))),
-                buildCredits("Maintainers",
-                        credit("DaUltraMarine", "Code")),
-                buildCredits("Contributors",
-                        credit("CatTeaA", "Code"),
-                        credit("HarvelsX", "Code"),
-                        credit("HookWoods", "Code"),
-                        credit("mfnalex", "Code"),
-                        credit("MrPippi", "Code"),
-                        credit("Preva1l", "Code"),
-                        credit("quiquelhappy", "Code"),
-                        credit("hanbings", "Code (Fabric porting)"),
-                        credit("Stampede2011", "Code (Fabric mixins)"),
-                        credit("VinerDream", "Code"),
-                        credit("WaterArchery", "Code")),
-                buildCredits("Translators",
-                        credit("Namiu", "Japanese (ja-jp)"),
-                        credit("anchelthe", "Spanish (es-es)"),
-                        credit("Melonzio", "Spanish (es-es)"),
-                        credit("Ceddix", "German (de-de)"),
-                        credit("Pukejoy_1", "Bulgarian (bg-bg)"),
-                        credit("mateusneresrb", "Brazilian Portuguese (pt-br)"),
-                        credit("小蔡", "Traditional Chinese (zh-tw)"),
-                        credit("Ghost-chu", "Simplified Chinese (zh-cn)"),
-                        credit("DJelly4K", "Simplified Chinese (zh-cn)"),
-                        credit("Thourgard", "Ukrainian (uk-ua)"),
-                        credit("xF3d3", "Italian (it-it)"),
-                        credit("cada3141", "Korean (ko-kr)"),
-                        credit("Wirayuda5620", "Indonesian (id-id)"),
-                        credit("WinTone01", "Turkish (tr-tr)"),
-                        credit("IbanEtchep", "French (fr-fr)"),
-                        credit("Ris", "Hungarian (hu-hu)"),
-                        credit("Antonioo", "Polish (pl-pl)")),
-                Component.empty(),
-                // Buttons
-                Component.textOfChildren(
-                        link("⛏ Documentation", "https://william278.net/docs/husksync"),
-                        Component.text("  ", gray),
-                        link("❌ Issues", "https://github.com/WiIIiam278/HuskSync/issues", TextColor.color(0xff9f0f)),
-                        Component.text("  ", gray),
-                        link("⭐ Discord", "https://discord.gg/tVYhJfyDWG", TextColor.color(0x6773f5))
-                )
-        );
+        return Component.text("Kokonut_Sync " + plugin.getPluginVersion() + " | 에고버스 플러그인 | pingpong")
+            .clickEvent(ClickEvent.openUrl("https://wiki.egoverse.kr"));
     }
 
     @NotNull
@@ -155,9 +94,7 @@ public class HuskSyncCommand extends PluginCommand {
         command.addSubCommand("status", needsOp("status"), status());
         command.addSubCommand("dump", needsOp("dump"), dump());
         command.addSubCommand("reload", needsOp("reload"), reload());
-        command.addSubCommand("update", needsOp("update"), update());
         command.addSubCommand("forceupgrade", forceUpgrade());
-        command.addSubCommand("migrate", migrate());
     }
 
     private void about(@NotNull BaseCommand<?> c, @NotNull CommandContext<?> ctx) {
@@ -214,54 +151,9 @@ public class HuskSyncCommand extends PluginCommand {
         });
     }
 
-    @NotNull
-    private CommandProvider update() {
-        return (sub) -> sub.setDefaultExecutor((ctx) -> updateChecker.check().thenAccept(checked -> {
-            final CommandUser user = user(sub, ctx);
-            if (checked.isUpToDate()) {
-                plugin.getLocales().getLocale("up_to_date", plugin.getPluginVersion().toString())
-                        .ifPresent(user::sendMessage);
-                return;
-            }
-            plugin.getLocales().getLocale("update_available", checked.getLatestVersion().toString(),
-                    plugin.getPluginVersion().toString()).ifPresent(user::sendMessage);
-        }));
-    }
 
-    @NotNull
-    private CommandProvider migrate() {
-        return (sub) -> {
-            sub.setCondition((ctx) -> sub.getUser(ctx).isConsole());
-            sub.setDefaultExecutor((ctx) -> {
-                plugin.log(Level.INFO, "Please choose a migrator, then run \"husksync migrate start <migrator>\"");
-                plugin.log(Level.INFO, String.format(
-                        "List of available migrators:\nMigrator ID / Migrator Name:\n%s",
-                        plugin.getAvailableMigrators().stream()
-                                .map(migrator -> String.format("%s - %s", migrator.getIdentifier(), migrator.getName()))
-                                .collect(Collectors.joining("\n"))
-                ));
-            });
-            sub.addSubCommand("help", (help) -> help.addSyntax((cmd) -> {
-                final Migrator migrator = cmd.getArgument("migrator", Migrator.class);
-                plugin.log(Level.INFO, migrator.getHelpMenu());
-            }, migrator()));
-            sub.addSubCommand("start", (start) -> start.addSyntax((cmd) -> {
-                final Migrator migrator = cmd.getArgument("migrator", Migrator.class);
-                migrator.start().thenAccept(succeeded -> {
-                    if (succeeded) {
-                        plugin.log(Level.INFO, "Migration completed successfully!");
-                    } else {
-                        plugin.log(Level.WARNING, "Migration failed!");
-                    }
-                });
-            }, migrator()));
-            sub.addSubCommand("set", (set) -> set.addSyntax((cmd) -> {
-                final Migrator migrator = cmd.getArgument("migrator", Migrator.class);
-                final String[] args = cmd.getArgument("args", String.class).split(" ");
-                migrator.handleConfigurationCommand(args);
-            }, migrator(), BaseCommand.greedyString("args")));
-        };
-    }
+
+
 
     @NotNull
     private CommandProvider forceUpgrade() {
@@ -292,22 +184,6 @@ public class HuskSyncCommand extends PluginCommand {
         };
     }
 
-    @NotNull
-    private <S> ArgumentElement<S, Migrator> migrator() {
-        return new ArgumentElement<>("migrator", reader -> {
-            final String id = reader.readString();
-            final Migrator migrator = plugin.getAvailableMigrators().stream()
-                    .filter(m -> m.getIdentifier().equalsIgnoreCase(id)).findFirst().orElse(null);
-            if (migrator == null) {
-                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(reader);
-            }
-            return migrator;
-        }, (context, builder) -> {
-            for (Migrator material : plugin.getAvailableMigrators()) {
-                builder.suggest(material.getIdentifier());
-            }
-            return builder.buildFuture();
-        });
-    }
+
 
 }

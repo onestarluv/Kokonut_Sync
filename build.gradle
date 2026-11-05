@@ -2,18 +2,14 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
     id 'com.gradleup.shadow' version '9.5.1'
-    id 'net.neoforged.licenser' version '0.7.5' apply false
-    id 'dev.architectury.loom' version '1.9-SNAPSHOT' apply false
-    id 'gg.essential.multi-version.root' apply false
-    id 'org.ajoberstar.grgit' version '5.3.2'
     id 'maven-publish'
     id 'java'
 }
 
-group 'net.william278'
-version "$ext.plugin_version${versionMetadata()}"
+group 'kr.gomsv'
+version "$ext.plugin_version"
 description "$ext.plugin_description"
-defaultTasks 'licenseFormat', 'build'
+defaultTasks 'build'
 
 ext {
     set 'version', version.toString()
@@ -64,13 +60,12 @@ allprojects {
     if (project.name == 'fabric' || project.name == 'bukkit') {
         return
     }
-    
+
     apply plugin: 'com.gradleup.shadow'
-    apply plugin: 'net.neoforged.licenser'
     apply plugin: 'java'
 
     compileJava.options.encoding = 'UTF-8'
-    compileJava.options.release.set 17
+    compileJava.options.release.set 25
     javadoc.options.encoding = 'UTF-8'
     javadoc.options.addStringOption('Xdoclint:none', '-quiet')
     javadoc.options.tags = ['apiNote:a:API Note:', 'implNote:a:Implementation Note:']
@@ -97,17 +92,12 @@ allprojects {
         testCompileOnly 'org.jetbrains:annotations:26.1.0'
     }
 
-    license {
-        header = rootProject.file('HEADER')
-        include '**/*.java'
-        newLine = true
-    }
-
     test {
         useJUnitPlatform()
     }
 
     processResources {
+        filteringCharset = 'UTF-8'
         def tokenMap = rootProject.ext.properties
         tokenMap.merge("grgit", '', (s, s2) -> s)
         filesMatching(['**/*.json', '**/*.yml']) {
@@ -216,26 +206,4 @@ subprojects {
 
     jar.dependsOn shadowJar
     clean.delete "$rootDir/target"
-}
-
-logger.lifecycle("Building HuskSync ${version} by William278")
-
-@SuppressWarnings('GrMethodMayBeStatic')
-def versionMetadata() {
-    // Require grgit
-    if (grgit == null) {
-        return '-unknown'
-    }
-
-    // If unclean, return the last commit hash with -indev
-    if (!grgit.status().clean) {
-        return '-' + grgit.head().abbreviatedId + '-indev'
-    }
-
-    // Otherwise if this matches a tag, return nothing
-    def tag = grgit.tag.list().find { it.commit.id == grgit.head().id }
-    if (tag != null) {
-        return ''
-    }
-    return '-' + grgit.head().abbreviatedId
 }

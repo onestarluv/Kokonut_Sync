@@ -25,28 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 public interface DataVersionSupplier {
 
-    int VERSION1_16_5 = 2586;
-    int VERSION1_17_1 = 2730;
-    int VERSION1_18_2 = 2975;
-    int VERSION1_19_2 = 3120;
-    int VERSION1_19_4 = 3337;
-    int VERSION1_20_1 = 3465;
-    int VERSION1_20_2 = 3578;
-    int VERSION1_20_4 = 3700;
-    int VERSION1_20_5 = 3837;
-    int VERSION1_21_1 = 3955;
-    int VERSION1_21_3 = 4082;
-    int VERSION1_21_4 = 4189;
-    int VERSION1_21_5 = 4323;
-    int VERSION1_21_6 = 4435;
-    int VERSION1_21_7 = 4438;
-    int VERSION1_21_8 = 4438;
-    int VERSION1_21_9 = 4554;
-    int VERSION1_21_10 = 4556;
-    int VERSION1_21_11 = 4671;
-	int VERSION26_1 = 4786;
-	int VERSION26_2 = 4903;
-	int VERSION26_3 = 5023;
+    int VERSION26_3 = 5023;
 
     /**
      * Returns the data version for a Minecraft version
@@ -55,31 +34,8 @@ public interface DataVersionSupplier {
      * @return the data version int
      */
     default int getDataVersion(@NotNull Version mcVersion) {
-        return switch (mcVersion.toStringWithoutMetadata()) {
-            case "1.16", "1.16.1", "1.16.2", "1.16.3", "1.16.4", "1.16.5" -> VERSION1_16_5;
-            case "1.17", "1.17.1" -> VERSION1_17_1;
-            case "1.18", "1.18.1", "1.18.2" -> VERSION1_18_2;
-            case "1.19", "1.19.1", "1.19.2" -> VERSION1_19_2;
-            case "1.19.4" -> VERSION1_19_4;
-            case "1.20", "1.20.1" -> VERSION1_20_1;
-            case "1.20.2" -> VERSION1_20_2;
-            case "1.20.4" -> VERSION1_20_4;
-            case "1.20.5", "1.20.6" -> VERSION1_20_5;
-            case "1.21", "1.21.1" -> VERSION1_21_1;
-            case "1.21.2", "1.21.3" -> VERSION1_21_3;
-            case "1.21.4" -> VERSION1_21_4;
-            case "1.21.5" -> VERSION1_21_5;
-            case "1.21.6" -> VERSION1_21_6;
-            case "1.21.7" -> VERSION1_21_7;
-            case "1.21.8" -> VERSION1_21_8;
-            case "1.21.9" -> VERSION1_21_9;
-            case "1.21.10" -> VERSION1_21_10;
-            case "1.21.11" -> VERSION1_21_11;
-			case "26.1", "26.1.1", "26.1.2" -> VERSION26_1;
-			case "26.2" -> VERSION26_2;
-			case "26.3" -> VERSION26_3;
-			default -> VERSION26_3; // Latest supported version
-        };
+        if (!mcVersion.toStringWithoutMetadata().equals("26.3")) throw new IllegalArgumentException("Only Minecraft 26.3 is supported");
+        return VERSION26_3;
     }
 
     @NotNull

@@ -20,7 +20,7 @@
 package net.william278.husksync.database;
 
 import com.google.common.collect.Lists;
-import com.zaxxer.hikari.HikariDataSource;
+import kr.gomsv.kokonutCore.api.database.CoreDatabase;
 import net.william278.husksync.HuskSync;
 import net.william278.husksync.adapter.DataAdapter;
 import net.william278.husksync.data.DataSnapshot;
@@ -40,88 +40,22 @@ import static net.william278.husksync.config.Settings.DatabaseSettings;
 
 public class MySqlDatabase extends Database {
 
-    private static final String DATA_POOL_NAME = "HuskSyncHikariPool";
-    private final String flavor;
-    private final String driverClass;
-    private HikariDataSource dataSource;
+    private CoreDatabase coreDatabase;
+    public MySqlDatabase(@NotNull HuskSync plugin, CoreDatabase coreDatabase) { super(plugin); this.coreDatabase = Objects.requireNonNull(coreDatabase, "Core database service unavailable"); }
 
-    public MySqlDatabase(@NotNull HuskSync plugin) {
-        super(plugin);
-
-        final Type type = plugin.getSettings().getDatabase().getType();
-        this.flavor = type.getProtocol();
-        this.driverClass = type == Type.MARIADB ? "org.mariadb.jdbc.Driver" : "com.mysql.cj.jdbc.Driver";
-    }
-
-    /**
-     * Fetch the auto-closeable connection from the hikariDataSource
-     *
-     * @return The {@link Connection} to the MySQL database
-     * @throws SQLException if the connection fails for some reason
-     */
     @Blocking
     @NotNull
-    private Connection getConnection() throws SQLException {
-        if (dataSource == null) {
-            throw new IllegalStateException("The database has not been initialized");
-        }
-        return dataSource.getConnection();
-    }
+    private Connection getConnection() throws SQLException { return coreDatabase.openConnection(); }
 
     @Blocking
     @Override
     public void initialize() throws IllegalStateException {
-        // Initialize the Hikari pooled connection
-        final DatabaseSettings.DatabaseCredentials credentials = plugin.getSettings().getDatabase().getCredentials();
-        dataSource = new HikariDataSource();
-        dataSource.setDriverClassName(driverClass);
-        dataSource.setJdbcUrl(String.format("jdbc:%s://%s:%s/%s%s",
-                flavor,
-                credentials.getHost(),
-                credentials.getPort(),
-                credentials.getDatabase(),
-                credentials.getParameters()
-        ));
-
-        // Authenticate with the database
-        dataSource.setUsername(credentials.getUsername());
-        dataSource.setPassword(credentials.getPassword());
-
-        // Set connection pool options
-        final DatabaseSettings.PoolSettings pool = plugin.getSettings().getDatabase().getConnectionPool();
-        dataSource.setMaximumPoolSize(pool.getMaximumPoolSize());
-        dataSource.setMinimumIdle(pool.getMinimumIdle());
-        dataSource.setMaxLifetime(pool.getMaximumLifetime());
-        dataSource.setKeepaliveTime(pool.getKeepaliveTime());
-        dataSource.setConnectionTimeout(pool.getConnectionTimeout());
-        dataSource.setPoolName(DATA_POOL_NAME);
-
-        // Set additional connection pool properties
-        final Properties properties = new Properties();
-        properties.putAll(
-                Map.of("cachePrepStmts", "true",
-                        "prepStmtCacheSize", "250",
-                        "prepStmtCacheSqlLimit", "2048",
-                        "useServerPrepStmts", "true",
-                        "useLocalSessionState", "true",
-                        "useLocalTransactionState", "true"
-                ));
-        properties.putAll(
-                Map.of(
-                        "rewriteBatchedStatements", "true",
-                        "cacheResultSetMetadata", "true",
-                        "cacheServerConfiguration", "true",
-                        "elideSetAutoCommits", "true",
-                        "maintainTimeStats", "false")
-        );
-        dataSource.setDataSourceProperties(properties);
-
         // Check config for if tables should be created
         if (!plugin.getSettings().getDatabase().isCreateTables()) return;
 
         // Prepare database schema; make tables if they don't exist
-        try (Connection connection = dataSource.getConnection()) {
-            final String[] databaseSchema = getSchemaStatements(String.format("database/%s_schema.sql", flavor));
+        try (Connection connection = getConnection()) {
+            final String[] databaseSchema = getSchemaStatements("database/mysql_schema.sql");
             try (Statement statement = connection.createStatement()) {
                 for (String tableCreationStatement : databaseSchema) {
                     statement.execute(tableCreationStatement);
@@ -616,12 +550,6 @@ public class MySqlDatabase extends Database {
     }
 
     @Override
-    public void terminate() {
-        if (dataSource != null) {
-            if (!dataSource.isClosed()) {
-                dataSource.close();
-            }
-        }
-    }
+    public void terminate() {}
 
 }
