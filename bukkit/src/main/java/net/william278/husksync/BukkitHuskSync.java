@@ -285,6 +285,12 @@ public class BukkitHuskSync extends JavaPlugin implements HuskSync, BukkitTask.S
     }
 
     @Override
+    public net.william278.husksync.user.ConsoleUser getConsole() {
+        return new net.william278.husksync.user.ConsoleUser(getAudiences(),
+                message -> kr.gomsv.kokonutCore.api.util.MessageUtil.send(getServer().getConsoleSender(), message));
+    }
+
+    @Override
     public boolean isDependencyLoaded(@NotNull String name) {
         final Plugin plugin = getServer().getPluginManager().getPlugin(name);
         return plugin != null;

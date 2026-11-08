@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly files(rootProject.file(findProperty('coreJar') ?: '../core/Kokonut-Core/build/libs/Kokonut-Core-cbt-1.0.jar'))
+    compileOnly files(rootProject.file(findProperty('coreJar') ?: '../Kokonut_Core/build/libs/Kokonut-Core-cbt-1.0.jar'))
     api 'commons-io:commons-io:2.22.0'
     api 'org.apache.commons:commons-text:1.15.0'
     api 'net.william278:mapdataapi:2.0'

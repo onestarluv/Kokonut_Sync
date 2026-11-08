@@ -88,7 +88,7 @@ public class DataSnapshotOverview {
                             Integer.toString((int) attributes.get().getMaxHealth()),
                             Integer.toString(food.get().getFoodLevel()),
                             Integer.toString(exp.get().getExpLevel()),
-                            mode.get().getGameMode().toLowerCase(Locale.ENGLISH))
+                            switch (mode.get().getGameMode().toUpperCase(Locale.ROOT)) { case "SURVIVAL" -> "생존"; case "CREATIVE" -> "크리에이티브"; case "ADVENTURE" -> "모험"; case "SPECTATOR" -> "관전"; default -> "알 수 없음"; })
                     .ifPresent(user::sendMessage);
         }
 

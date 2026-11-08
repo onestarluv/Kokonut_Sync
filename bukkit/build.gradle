@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly files(rootProject.file(findProperty('coreJar') ?: '../core/Kokonut-Core/build/libs/Kokonut-Core-cbt-1.0.jar'))
+    compileOnly files(rootProject.file(findProperty('coreJar') ?: '../Kokonut_Core/build/libs/Kokonut-Core-cbt-1.0.jar'))
     implementation project(path: ':common')
 
     implementation 'net.william278.uniform:uniform-bukkit:1.4.0'
@@ -90,6 +90,14 @@ def collectPluginArtifact = tasks.register('collectPluginArtifact', Copy) {
     def artifact = tasks.named('shadowJar')
     dependsOn artifact
     from(artifact.flatMap { it.archiveFile })
-    into(rootProject.layout.projectDirectory.dir('../core/plugin'))
+    into(rootProject.layout.projectDirectory.dir('../plugin'))
 }
 tasks.named('shadowJar') { finalizedBy collectPluginArtifact }
+// 테스트 서버 plugins 폴더로도 바로 복사한다 (-PdeployDir=... 로 경로 변경 가능).
+def deployPluginArtifact = tasks.register('deployPluginArtifact', Copy) {
+    def artifact = tasks.named('shadowJar')
+    dependsOn artifact
+    from(artifact.flatMap { it.archiveFile })
+    into(providers.gradleProperty('deployDir').orElse('D:/egoverse/home1/plugins'))
+}
+tasks.named('shadowJar') { finalizedBy deployPluginArtifact }

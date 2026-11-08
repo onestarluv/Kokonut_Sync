@@ -47,13 +47,23 @@ public abstract class PluginCommand extends Command {
         this.plugin = plugin;
     }
 
+    private static String commandKey(String name) {
+        return switch (name) {
+            case "동기화" -> "husksync";
+            case "동기화데이터" -> "userdata";
+            case "동기화인벤토리" -> "inventory";
+            case "동기화엔더상자" -> "enderchest";
+            default -> name;
+        };
+    }
+
     private static String getDescription(@NotNull HuskSync plugin, @NotNull String name) {
-        return plugin.getLocales().getRawLocale("%s_command_description".formatted(name)).orElse("");
+        return plugin.getLocales().getRawLocale("%s_command_description".formatted(commandKey(name))).orElse("");
     }
 
     @NotNull
     private static String createPermission(@NotNull String name, @NotNull String... sub) {
-        return "husksync.command." + name + (sub.length > 0 ? "." + String.join(".", sub) : "");
+        return "husksync.command." + commandKey(name) + (sub.length > 0 ? "." + String.join(".", sub) : "");
     }
 
     @NotNull
@@ -96,7 +106,7 @@ public abstract class PluginCommand extends Command {
         return new ArgumentElement<>(name, reader -> {
             final String username = reader.readString();
             return plugin.getDatabase().getUserByName(username).orElseThrow(
-                    () -> CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(reader)
+                    () -> new com.mojang.brigadier.exceptions.SimpleCommandExceptionType(new com.mojang.brigadier.LiteralMessage("플레이어 또는 스냅샷을 확인해 주세요.")).createWithContext(reader)
             );
         }, (context, builder) -> {
             plugin.getOnlineUsers().forEach(u -> builder.suggest(u.getName()));
@@ -106,15 +116,15 @@ public abstract class PluginCommand extends Command {
 
     @NotNull
     protected  <S> ArgumentElement<S, UUID> versionUuid() {
-        return new ArgumentElement<>("version", reader -> {
+        return new ArgumentElement<>("스냅샷", reader -> {
             try {
                 return UUID.fromString(reader.readString());
             } catch (IllegalArgumentException e) {
-                throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument().createWithContext(reader);
+                throw new com.mojang.brigadier.exceptions.SimpleCommandExceptionType(new com.mojang.brigadier.LiteralMessage("플레이어 또는 스냅샷을 확인해 주세요.")).createWithContext(reader);
             }
         }, (context, builder) -> {
             try {
-                plugin.getDatabase().getAllSnapshots(context.getArgument("username", User.class))
+                plugin.getDatabase().getAllSnapshots(context.getArgument("플레이어", User.class))
                         .stream().sorted(Comparator.comparing(d -> d.getTimestamp().toEpochSecond()))
                         .forEach(id -> builder.suggest(id.getId().toString()));
                 return builder.buildFuture();

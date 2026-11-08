@@ -36,7 +36,7 @@ import java.util.Optional;
 public class InventoryCommand extends ItemsCommand {
 
     public InventoryCommand(@NotNull HuskSync plugin) {
-        super("inventory", List.of("invsee", "openinv"), DataSnapshot.SaveCause.INVENTORY_COMMAND, plugin);
+        super("동기화인벤토리", List.of(), DataSnapshot.SaveCause.INVENTORY_COMMAND, plugin);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class InventoryCommand extends ItemsCommand {
         // Display opening message
         plugin.getLocales().getLocale("inventory_viewer_opened", user.getName(),
                         snapshot.getTimestamp().format(DateTimeFormatter
-                                .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)))
+                                .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(java.util.Locale.KOREAN)))
                 .ifPresent(viewer::sendMessage);
 
         // Show GUI
@@ -60,7 +60,7 @@ public class InventoryCommand extends ItemsCommand {
         viewer.showGui(
                 inventory,
                 plugin.getLocales().getLocale("inventory_viewer_menu_title", user.getName())
-                        .orElse(Component.text(String.format("%s's Inventory", user.getName()))),
+                        .orElse(Component.text(String.format("%s님의 인벤토리", user.getName()))),
                 allowEdit,
                 inventory.getSlotCount(),
                 (itemsOnClose) -> {

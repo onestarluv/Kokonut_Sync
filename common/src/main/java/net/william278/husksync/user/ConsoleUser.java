@@ -28,8 +28,21 @@ public final class ConsoleUser implements CommandUser {
     @NotNull
     private final Audience audience;
 
+    private final java.util.function.Consumer<net.kyori.adventure.text.Component> messages;
+
     public ConsoleUser(@NotNull AudienceProvider audiences) {
+        this(audiences, audiences.console()::sendMessage);
+    }
+
+    public ConsoleUser(@NotNull AudienceProvider audiences,
+                       java.util.function.Consumer<net.kyori.adventure.text.Component> messages) {
         this.audience = audiences.console();
+        this.messages = messages;
+    }
+
+    @Override
+    public void sendMessage(@NotNull net.kyori.adventure.text.Component component) {
+        messages.accept(component);
     }
 
     @Override

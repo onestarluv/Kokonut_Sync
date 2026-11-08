@@ -66,7 +66,7 @@ public class DataSnapshotList {
                                 .getRawLocale("data_list_title", dataOwner.getName(),
                                         "%first_item_on_page_index%", "%last_item_on_page_index%", "%total_items%")
                                 .orElse(""))
-                        .setCommand("/husksync:userdata list " + dataOwner.getName())
+                        .setCommand("/동기화데이터 목록 " + dataOwner.getName())
                         .build());
     }
 

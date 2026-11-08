@@ -41,10 +41,8 @@ public enum StatusLine {
     JAVA_VERSION(plugin -> Component.text(System.getProperty("java.version"))),
     JAVA_VENDOR(plugin -> Component.text(System.getProperty("java.vendor"))),
     SERVER_NAME(plugin -> Component.text(plugin.getServerName())),
-    CLUSTER_ID(plugin -> Component.text(plugin.getSettings().getClusterId().isBlank() ? "None" : plugin.getSettings().getClusterId())),
-    SYNC_MODE(plugin -> Component.text(WordUtils.capitalizeFully(
-            plugin.getSettings().getSynchronization().getMode().toString()
-    ))),
+    CLUSTER_ID(plugin -> Component.text(plugin.getSettings().getClusterId().isBlank() ? "없음" : plugin.getSettings().getClusterId())),
+    SYNC_MODE(plugin -> Component.text(plugin.getSettings().getSynchronization().getMode() == net.william278.husksync.sync.DataSyncer.Mode.LOCKSTEP ? "잠금 동기화" : "지연 동기화")),
     DELAY_LATENCY(plugin -> Component.text(
             plugin.getSettings().getSynchronization().getNetworkLatencyMilliseconds() + "ms"
     )),
@@ -74,12 +72,12 @@ public enum StatusLine {
                             .appendSpace().append(Component.text(i.isEnabled() ? '✔' : '❌')))
                     .color(i.isEnabled() ? NamedTextColor.GREEN : NamedTextColor.RED)
                     .hoverEvent(HoverEvent.showText(
-                            Component.text(i.isEnabled() ? "Enabled" : "Disabled")
+                            Component.text(i.isEnabled() ? "사용" : "사용 안 함")
                                     .append(Component.newline())
-                                    .append(Component.text("Dependencies: %s".formatted(i.getDependencies()
-                                            .isEmpty() ? "(None)" : i.getDependencies().stream()
+                                    .append(Component.text("연관 항목: %s".formatted(i.getDependencies()
+                                            .isEmpty() ? "(없음)" : i.getDependencies().stream()
                                             .map(d -> "%s (%s)".formatted(
-                                                    d.getKey().value(), d.isRequired() ? "Required" : "Optional"
+                                                    d.getKey().value(), d.isRequired() ? "필수" : "선택"
                                             )).collect(Collectors.joining(", ")))
                                     ).color(NamedTextColor.GRAY))
                     ))).toList()
@@ -96,7 +94,7 @@ public enum StatusLine {
         return Component
                 .text("•").appendSpace()
                 .append(Component.text(
-                        WordUtils.capitalizeFully(name().replaceAll("_", " ")),
+                        switch (this) { case PLUGIN_VERSION -> "플러그인 버전"; case SERVER_VERSION -> "서버 버전"; case LANGUAGE -> "언어"; case MINECRAFT_VERSION -> "마인크래프트 버전"; case JAVA_VERSION -> "자바 버전"; case JAVA_VENDOR -> "자바 공급자"; case SERVER_NAME -> "서버 이름"; case CLUSTER_ID -> "동기화 그룹"; case SYNC_MODE -> "동기화 방식"; case DELAY_LATENCY -> "지연 시간"; case DATABASE_TYPE -> "데이터베이스"; case REDIS_VERSION -> "Redis 버전"; case USING_REDIS_SENTINEL -> "Redis 센티널 사용"; case REDIS_DATABASE -> "Redis 데이터베이스"; case USING_REDIS_USER -> "Redis 사용자 인증"; case USING_REDIS_PASSWORD -> "Redis 비밀번호 인증"; case REDIS_USING_SSL -> "Redis 암호화"; case REDIS_LATENCY -> "Redis 응답 시간"; case IS_REDIS_LOCAL -> "로컬 Redis"; case LOCKED_USER_HANDLER -> "잠금 처리기"; case DATA_TYPES -> "동기화 항목"; },
                         TextColor.color(0x848484)
                 ))
                 .append(Component.text(':')).append(Component.space().color(NamedTextColor.WHITE))
@@ -110,7 +108,7 @@ public enum StatusLine {
 
     @NotNull
     private static Component getBoolean(boolean value) {
-        return Component.text(value ? "Yes" : "No", value ? NamedTextColor.GREEN : NamedTextColor.RED);
+        return Component.text(value ? "예" : "아니요", value ? NamedTextColor.GREEN : NamedTextColor.RED);
     }
 
     @NotNull

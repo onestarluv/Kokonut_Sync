@@ -48,18 +48,18 @@ import java.util.logging.Level;
 public class UserDataCommand extends PluginCommand {
 
     public UserDataCommand(@NotNull HuskSync plugin) {
-        super("userdata", List.of("playerdata"), Permission.Default.IF_OP, ExecutionScope.ALL, plugin);
+        super("동기화데이터", List.of(), Permission.Default.IF_OP, ExecutionScope.ALL, plugin);
     }
 
     @Override
     public void provide(@NotNull BaseCommand<?> command) {
-        command.addSubCommand("view", needsOp("view"), view());
-        command.addSubCommand("list", needsOp("list"), list());
-        command.addSubCommand("delete", needsOp("delete"), delete());
-        command.addSubCommand("save", needsOp("save"), save());
-        command.addSubCommand("restore", needsOp("restore"), restore());
-        command.addSubCommand("pin", needsOp("pin"), pin());
-        command.addSubCommand("dump", needsOp("dump"), dump());
+        command.addSubCommand("조회", needsOp("view"), view());
+        command.addSubCommand("목록", needsOp("list"), list());
+        command.addSubCommand("삭제", needsOp("delete"), delete());
+        command.addSubCommand("저장", needsOp("save"), save());
+        command.addSubCommand("복원", needsOp("restore"), restore());
+        command.addSubCommand("고정", needsOp("pin"), pin());
+        command.addSubCommand("추출", needsOp("dump"), dump());
     }
 
     // Show the latest snapshot
@@ -217,14 +217,14 @@ public class UserDataCommand extends PluginCommand {
     private CommandProvider view() {
         return (sub) -> {
             sub.addSyntax((ctx) -> {
-                final User user = ctx.getArgument("username", User.class);
-                final UUID version = ctx.getArgument("version", UUID.class);
+                final User user = ctx.getArgument("플레이어", User.class);
+                final UUID version = ctx.getArgument("스냅샷", UUID.class);
                 viewSnapshot(user(sub, ctx), user, version);
-            }, user("username"), versionUuid());
+            }, user("플레이어"), versionUuid());
             sub.addSyntax((ctx) -> {
-                final User user = ctx.getArgument("username", User.class);
+                final User user = ctx.getArgument("플레이어", User.class);
                 viewLatestSnapshot(user(sub, ctx), user);
-            }, user("username"));
+            }, user("플레이어"));
         };
     }
 
@@ -232,57 +232,57 @@ public class UserDataCommand extends PluginCommand {
     private CommandProvider list() {
         return (sub) -> {
             sub.addSyntax((ctx) -> {
-                final User user = ctx.getArgument("username", User.class);
+                final User user = ctx.getArgument("플레이어", User.class);
                 listSnapshots(user(sub, ctx), user, 1);
-            }, user("username"));
+            }, user("플레이어"));
             sub.addSyntax((ctx) -> {
-                final User user = ctx.getArgument("username", User.class);
-                final int page = ctx.getArgument("page", Integer.class);
+                final User user = ctx.getArgument("플레이어", User.class);
+                final int page = ctx.getArgument("페이지", Integer.class);
                 listSnapshots(user(sub, ctx), user, page);
-            }, user("username"), BaseCommand.intNum("page", 1));
+            }, user("플레이어"), BaseCommand.intNum("페이지", 1));
         };
     }
 
     @NotNull
     private CommandProvider delete() {
         return (sub) -> sub.addSyntax((ctx) -> {
-            final User user = ctx.getArgument("username", User.class);
-            final UUID version = ctx.getArgument("version", UUID.class);
+            final User user = ctx.getArgument("플레이어", User.class);
+            final UUID version = ctx.getArgument("스냅샷", UUID.class);
             deleteSnapshot(user(sub, ctx), user, version);
-        }, user("username"), versionUuid());
+        }, user("플레이어"), versionUuid());
     }
 
     @NotNull
     private CommandProvider save() {
         return (sub) -> sub.addSyntax((ctx) -> {
-            final OnlineUser user = ctx.getArgument("username", OnlineUser.class);
+            final OnlineUser user = ctx.getArgument("플레이어", OnlineUser.class);
             createAndSaveSnapshot(user(sub, ctx), user);
-        }, onlineUser("username"));
+        }, onlineUser("플레이어"));
     }
 
     @NotNull
     private CommandProvider restore() {
         return (sub) -> sub.addSyntax((ctx) -> {
-            final User user = ctx.getArgument("username", User.class);
-            final UUID version = ctx.getArgument("version", UUID.class);
+            final User user = ctx.getArgument("플레이어", User.class);
+            final UUID version = ctx.getArgument("스냅샷", UUID.class);
             restoreSnapshot(user(sub, ctx), user, version);
-        }, user("username"), versionUuid());
+        }, user("플레이어"), versionUuid());
     }
 
     @NotNull
     private CommandProvider pin() {
         return (sub) -> sub.addSyntax((ctx) -> {
-            final User user = ctx.getArgument("username", User.class);
-            final UUID version = ctx.getArgument("version", UUID.class);
+            final User user = ctx.getArgument("플레이어", User.class);
+            final UUID version = ctx.getArgument("스냅샷", UUID.class);
             pinSnapshot(user(sub, ctx), user, version);
-        }, user("username"), versionUuid());
+        }, user("플레이어"), versionUuid());
     }
 
     @NotNull
     private CommandProvider dump() {
         return (sub) -> {
             sub.addSyntax((ctx) -> {
-                final User user = ctx.getArgument("username", User.class);
+                final User user = ctx.getArgument("플레이어", User.class);
                 final CommandUser executor = user(sub, ctx);
                 plugin.getRedisManager()
                         .getOnlineUserData(UUID.randomUUID(), user, DataSnapshot.SaveCause.DUMP_COMMAND)
@@ -293,28 +293,27 @@ public class UserDataCommand extends PluginCommand {
                                         () -> plugin.getLocales().getLocale("error_no_data_to_display")
                                                 .ifPresent(executor::sendMessage)
                                 ));
-            }, user("username"));
+            }, user("플레이어"));
             sub.addSyntax((ctx) -> {
-                final User user = ctx.getArgument("username", User.class);
-                final UUID version = ctx.getArgument("version", UUID.class);
-                final DumpType type = ctx.getArgument("type", DumpType.class);
+                final User user = ctx.getArgument("플레이어", User.class);
+                final UUID version = ctx.getArgument("스냅샷", UUID.class);
+                final DumpType type = ctx.getArgument("방식", DumpType.class);
                 dumpSnapshot(user(sub, ctx), user, version, type);
-            }, user("username"), versionUuid(), dumpType());
+            }, user("플레이어"), versionUuid(), dumpType());
         };
     }
 
     private <S> ArgumentElement<S, DumpType> dumpType() {
-        return new ArgumentElement<>("type", reader -> {
+        return new ArgumentElement<>("방식", reader -> {
             final String type = reader.readString();
             return switch (type.toLowerCase(Locale.ENGLISH)) {
-                case "web" -> DumpType.WEB;
-                case "file" -> DumpType.FILE;
-                default -> throw CommandSyntaxException.BUILT_IN_EXCEPTIONS
-                        .dispatcherUnknownArgument().createWithContext(reader);
+                case "웹" -> DumpType.WEB;
+                case "파일" -> DumpType.FILE;
+                default -> throw new com.mojang.brigadier.exceptions.SimpleCommandExceptionType(new com.mojang.brigadier.LiteralMessage("추출 방식은 웹 또는 파일을 입력해 주세요.")).createWithContext(reader);
             };
         }, (context, builder) -> {
-            builder.suggest("web");
-            builder.suggest("file");
+            builder.suggest("웹");
+            builder.suggest("파일");
             return builder.buildFuture();
         });
     }

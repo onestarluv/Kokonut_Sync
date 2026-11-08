@@ -36,7 +36,7 @@ import java.util.Optional;
 public class EnderChestCommand extends ItemsCommand {
 
     public EnderChestCommand(@NotNull HuskSync plugin) {
-        super("enderchest", List.of("echest", "openechest"), DataSnapshot.SaveCause.ENDERCHEST_COMMAND, plugin);
+        super("동기화엔더상자", List.of(), DataSnapshot.SaveCause.ENDERCHEST_COMMAND, plugin);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class EnderChestCommand extends ItemsCommand {
         // Display opening message
         plugin.getLocales().getLocale("ender_chest_viewer_opened", user.getName(),
                         snapshot.getTimestamp().format(DateTimeFormatter
-                                .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)))
+                                .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).withLocale(java.util.Locale.KOREAN)))
                 .ifPresent(viewer::sendMessage);
 
         // Show GUI
@@ -60,7 +60,7 @@ public class EnderChestCommand extends ItemsCommand {
         viewer.showGui(
                 enderChest,
                 plugin.getLocales().getLocale("ender_chest_viewer_menu_title", user.getName())
-                        .orElse(Component.text(String.format("%s's Ender Chest", user.getName()))),
+                        .orElse(Component.text(String.format("%s님의 엔더 상자", user.getName()))),
                 allowEdit,
                 enderChest.getSlotCount(),
                 (itemsOnClose) -> {

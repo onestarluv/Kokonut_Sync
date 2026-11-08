@@ -21,6 +21,7 @@ package net.william278.husksync.user;
 
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.william278.husksync.HuskSync;
 import net.william278.husksync.data.Data;
 import net.william278.husksync.data.DataSnapshot;
@@ -152,7 +153,13 @@ public abstract class OnlineUser extends User implements CommandUser, UserDataHo
             try {
                 switch (plugin.getSettings().getSynchronization().getNotificationDisplaySlot()) {
                     case CHAT -> cause.getCompletedLocale(plugin).ifPresent(this::sendMessage);
-                    case ACTION_BAR -> cause.getCompletedLocale(plugin).ifPresent(this::sendActionBar);
+                    case ACTION_BAR -> {
+                        if (cause.completedLocale() != null) {
+                            final String message = plugin.getLocales().getRawLocale(cause.completedLocale())
+                                    .orElse(cause.getDisplayName());
+                            sendActionBar(MiniMessage.miniMessage().deserialize(message));
+                        }
+                    }
                 }
             } catch (Throwable e) {
                 plugin.log(Level.WARNING,

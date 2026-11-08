@@ -51,7 +51,7 @@ public class Locales {
             ┣╸ Formatted in MiniMessage: https://docs.advntr.dev/minimessage/index.html
             ┗╸ Translate HuskSync: https://william278.net/docs/husksync/translations""";
 
-    protected static final String DEFAULT_LOCALE = "en-gb";
+    protected static final String DEFAULT_LOCALE = "ko-kr";
 
     // Locale format version - increment to force re-extraction on format changes
     public static final int LOCALE_FORMAT_VERSION = 4;

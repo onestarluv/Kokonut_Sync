@@ -45,8 +45,8 @@ public abstract class ItemsCommand extends PluginCommand {
     @Override
     public void provide(@NotNull BaseCommand<?> command) {
         command.addSyntax((ctx) -> {
-            final User user = ctx.getArgument("username", User.class);
-            final UUID version = ctx.getArgument("version", UUID.class);
+            final User user = ctx.getArgument("플레이어", User.class);
+            final UUID version = ctx.getArgument("스냅샷", UUID.class);
             final CommandUser executor = user(command, ctx);
             if (!(executor instanceof OnlineUser online)) {
                 plugin.getLocales().getLocale("error_in_game_command_only")
@@ -54,9 +54,9 @@ public abstract class ItemsCommand extends PluginCommand {
                 return;
             }
             this.showSnapshotItems(online, user, version);
-        }, user("username"), versionUuid());
+        }, user("플레이어"), versionUuid());
         command.addSyntax((ctx) -> {
-            final User user = ctx.getArgument("username", User.class);
+            final User user = ctx.getArgument("플레이어", User.class);
             final CommandUser executor = user(command, ctx);
             if (!(executor instanceof OnlineUser online)) {
                 plugin.getLocales().getLocale("error_in_game_command_only")
@@ -64,7 +64,7 @@ public abstract class ItemsCommand extends PluginCommand {
                 return;
             }
             this.showLatestItems(online, user);
-        }, user("username"));
+        }, user("플레이어"));
     }
 
     // View (and edit) the latest user data

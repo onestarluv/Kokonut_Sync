@@ -57,6 +57,11 @@ public class BukkitUser extends OnlineUser implements BukkitUserDataHolder {
     }
 
     @Override
+    public void sendMessage(@NotNull Component component) {
+        kr.gomsv.kokonutCore.api.util.MessageUtil.send(player, component);
+    }
+
+    @Override
     public boolean hasDisconnected() {
         return getPlugin().getDisconnectingPlayers().contains(getUuid())
                 || player == null || !player.isOnline();

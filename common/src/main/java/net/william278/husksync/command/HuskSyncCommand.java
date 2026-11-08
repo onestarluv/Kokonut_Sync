@@ -51,7 +51,7 @@ public class HuskSyncCommand extends PluginCommand {
     private final Component aboutMenu;
 
     public HuskSyncCommand(@NotNull HuskSync plugin) {
-        super("husksync", List.of(), Permission.Default.TRUE, ExecutionScope.ALL, plugin);
+        super("동기화", List.of(), Permission.Default.TRUE, ExecutionScope.ALL, plugin);
         this.aboutMenu = buildAboutMenu(plugin);
     }
 
@@ -61,44 +61,18 @@ public class HuskSyncCommand extends PluginCommand {
             .clickEvent(ClickEvent.openUrl("https://wiki.egoverse.kr"));
     }
 
-    @NotNull
-    private static Component buildCredits(@NotNull String title, @NotNull Component... credits) {
-        return Component.textOfChildren(
-                Component.text(title + ": ", TextColor.color(0x00fb9a), TextDecoration.BOLD),
-                Component.join(JoinConfiguration.commas(true), credits)
-        );
-    }
-
-    @NotNull
-    private static Component credit(@NotNull String name, @NotNull String description) {
-        return Component.text(name, NamedTextColor.GRAY)
-                .hoverEvent(Component.text(description, TextColor.color(0x808080)));
-    }
-
-    @NotNull
-    private static Component link(@NotNull String text, @NotNull String url) {
-        return link(text, url, NamedTextColor.GRAY);
-    }
-
-    @NotNull
-    private static Component link(@NotNull String text, @NotNull String url, @NotNull TextColor color) {
-        return Component.text(text, color, TextDecoration.UNDERLINED)
-                .hoverEvent(Component.text("Click to open link", TextColor.color(0x808080)))
-                .clickEvent(ClickEvent.openUrl(url));
-    }
-
     @Override
     public void provide(@NotNull BaseCommand<?> command) {
         command.setDefaultExecutor((ctx) -> about(command, ctx));
-        command.addSubCommand("about", (sub) -> sub.setDefaultExecutor((ctx) -> about(command, ctx)));
-        command.addSubCommand("status", needsOp("status"), status());
-        command.addSubCommand("dump", needsOp("dump"), dump());
-        command.addSubCommand("reload", needsOp("reload"), reload());
-        command.addSubCommand("forceupgrade", forceUpgrade());
+        command.addSubCommand("정보", (sub) -> sub.setDefaultExecutor((ctx) -> about(command, ctx)));
+        command.addSubCommand("상태", needsOp("status"), status());
+        command.addSubCommand("추출", needsOp("dump"), dump());
+        command.addSubCommand("다시불러오기", needsOp("reload"), reload());
+        command.addSubCommand("구형자료변환", forceUpgrade());
     }
 
     private void about(@NotNull BaseCommand<?> c, @NotNull CommandContext<?> ctx) {
-        user(c, ctx).getAudience().sendMessage(aboutMenu);
+        user(c, ctx).sendMessage(aboutMenu);
     }
 
     @NotNull
@@ -120,7 +94,7 @@ public class HuskSyncCommand extends PluginCommand {
                 final CommandUser user = user(sub, ctx);
                 plugin.getLocales().getLocale("system_dump_confirm").ifPresent(user::sendMessage);
             });
-            sub.addSubCommand("confirm", (con) -> con.setDefaultExecutor((ctx) -> {
+            sub.addSubCommand("확인", (con) -> con.setDefaultExecutor((ctx) -> {
                 final CommandUser user = user(sub, ctx);
                 plugin.getLocales().getLocale("system_dump_started").ifPresent(user::sendMessage);
                 plugin.runAsync(() -> {
@@ -144,9 +118,9 @@ public class HuskSyncCommand extends PluginCommand {
                 plugin.getLocales().getLocale("reload_complete").ifPresent(user::sendMessage);
             } catch (Throwable e) {
                 user.sendMessage(plugin.getLocales().format(
-                        "<red>Error:</red> <gold>Failed to reload the plugin. Check console for errors.</gold>"
+                        "<red>내장 설정을 다시 불러오지 못했습니다. 콘솔을 확인해 주세요.</red>"
                 ));
-                plugin.log(Level.SEVERE, "Failed to reload the plugin", e);
+                plugin.log(Level.SEVERE, "내장 설정 다시 불러오기 실패", e);
             }
         });
     }
@@ -167,7 +141,7 @@ public class HuskSyncCommand extends PluginCommand {
 
                 plugin.runAsync(() -> {
                     final Database database = plugin.getDatabase();
-                    plugin.log(Level.INFO, "Beginning forced legacy data upgrade for all users...");
+                    plugin.log(Level.INFO, "모든 플레이어의 구형 데이터 변환을 시작합니다.");
                     database.getAllUsers().forEach(user -> database.getLatestSnapshot(user).ifPresent(snapshot -> {
                         final DataSnapshot.Packed upgraded = converter.convert(
                                 snapshot.asBytes(plugin),
@@ -178,7 +152,7 @@ public class HuskSyncCommand extends PluginCommand {
                         plugin.getDatabase().addSnapshot(user, upgraded);
                         plugin.getRedisManager().clearUserData(user);
                     }));
-                    plugin.log(Level.INFO, "Legacy data upgrade complete!");
+                    plugin.log(Level.INFO, "구형 데이터 변환을 완료했습니다.");
                 });
             });
         };

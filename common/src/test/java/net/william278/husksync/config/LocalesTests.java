@@ -64,6 +64,27 @@ public class LocalesTests {
         ));
     }
 
+    @Test
+    public void koreanMessagesAndSnapshotLinksRemainUsable() throws Exception {
+        try (InputStream input = getClass().getClassLoader().getResourceAsStream("locales/ko-kr.yml")) {
+            assertNotNull(input);
+            Locales korean = YamlConfigurations.read(input, Locales.class);
+            assertTrue(korean.getRawLocale("data_manager_status").isPresent());
+            for (String key : korean.locales.keySet()) {
+                assertDoesNotThrow(() -> korean.getLocale(key, "플레이어", "스냅샷", "값", "값", "값", "값", "값", "값", "값", "값"), key);
+            }
+            String buttons = korean.getRawLocale("data_manager_management_buttons").orElseThrow();
+            assertTrue(buttons.contains("/동기화데이터 삭제"));
+            assertTrue(buttons.contains("/동기화데이터 복원"));
+            assertTrue(buttons.contains("/동기화데이터 고정"));
+            assertFalse(buttons.contains("/userdata"));
+            assertTrue(korean.getRawLocale("system_dump_confirm").orElseThrow().contains("/동기화 추출 확인"));
+            String systemButtons = korean.getRawLocale("data_manager_system_buttons").orElseThrow();
+            assertTrue(systemButtons.contains(" 파일"));
+            assertTrue(systemButtons.contains(" 웹"));
+        }
+    }
+
     @NotNull
     private static Stream<Arguments> provideLocaleFiles() {
         final URL url = LocalesTests.class.getClassLoader().getResource("locales");
